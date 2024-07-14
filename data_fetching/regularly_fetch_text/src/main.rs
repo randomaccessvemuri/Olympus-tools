@@ -2,7 +2,7 @@ use mongodb::{
     bson::{doc, Document}, options::ClientOptions, Client, Collection 
 };
 
-use std::env;
+use std::{env, result};
 use std::error::Error;
 use futures::{stream::FuturesUnordered, StreamExt};
 use tokio::time::{interval, Duration, Instant};
@@ -11,9 +11,28 @@ use tokio::sync::Semaphore;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{stdout, Write};
 
+//Using package article_scraper
 async fn fetch_text(url: &str) -> Result<String, Box<dyn Error + Send + Sync>> {
-    let article = extrablatt::Article::get(url).await?;
-    Ok(article.content.text.unwrap().to_string())
+    let mut result = String::new();
+    let scraper = article_scraper::ArticleScraper::new(None).await;
+    let url = url::Url::parse(url)?;
+
+    let client = reqwest::Client::new();
+    let article = scraper.parse(&url, false, &client, None);
+
+    if let Ok(article) = article.await {
+        let intermediate = article.html.unwrap();
+        let document = scraper::Html::parse_document(&intermediate);
+        let selector = scraper::Selector::parse("p").unwrap();
+        for element in document.select(&selector) {
+            let text = element.text().collect::<Vec<_>>().join(" ");
+            result.push_str(&text);
+        }
+    }
+
+
+
+    Ok(result)
 }
 
 #[tokio::main]
