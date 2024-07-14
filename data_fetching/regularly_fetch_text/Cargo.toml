@@ -1,0 +1,13 @@
+[package]
+name = "regularly_fetch_text"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+extrablatt = "0.1.1"
+futures = "0.3.30"
+indicatif = "0.17.8"
+mongodb = "3.0.1"
+reqwest = "0.12.5"
+tokio = {version = "0.2.25", features = ["full"]}
+url = "2.5.2"
